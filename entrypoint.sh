@@ -88,18 +88,10 @@ echo "Built for non-SSL site..."
 # Copy and FTP transfer build to non-SSL site
 echo "Connecting to FTP..."
 
-ftp -n $FTP_HOST <<COMMAND_BLOCK
-quote USER $FTP_USER
-quote PASS $FTP_PASS
-
-binary
-
+lftp -u "$FTP_USER","$FTP_PASS" $FTP_HOST <<COMMAND_BLOCK
 cd public_html/http
-
 rm -rf "$DESTINATION_SUBDIR"
-mkdir "$DESTINATION_SUBDIR"
-cd "$DESTINATION_SUBDIR"
-mput *
+mirror -R . "$DESTINATION_SUBDIR"
 
 quit
 COMMAND_BLOCK
