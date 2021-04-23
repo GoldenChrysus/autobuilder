@@ -46,6 +46,9 @@ cat << EOF > .env-cmdrc
 		"REACT_APP_PAGE_TITLE": "$REACT_APP_PAGE_TITLE",
 		"REACT_APP_GOOGLE_TAG_MANAGER_ID": "$REACT_APP_GOOGLE_TAG_MANAGER_ID",
 		"REACT_APP_ENV": "$BUILD_TYPE"
+	},
+	"nonssl": {
+		"REACT_APP_GOOGLE_TAG_MANAGER_ID": "$REACT_APP_NONSSL_GOOGLE_TAG_MANAGER_ID"
 	}
 }
 EOF
@@ -65,14 +68,22 @@ cd $DESTINATION_DIR
 echo "Cloned destination repository..."
 
 # Copy and commit build to destination repository
+echo "Committing to destination repository..."
 rm -rf $DESTINATION_SUBDIR
 cp "../$ORIGIN_DIR/build" "./$DESTINATION_SUBDIR" -r
 
 git add .
 git commit -m "Update $BUILD_TYPE build: $REACT_APP_VERSION"
 git push origin --set-upstream "master"
+echo "Committed to destination repository..."
 
 # Build non-SSL repository
+echo "Building for non-SSL site..."
+cd "../$ORIGIN_DIR"
+
+npm run build$BUILD_NONSSL
+cd build
+echo "Built for non-SSL site..."
 
 # Copy and FTP transfer build to non-SSL site
 echo "Connecting to FTP..."
@@ -81,10 +92,14 @@ ftp -n $FTP_HOST <<COMMAND_BLOCK
 quote USER $FTP_USER
 quote PASS $FTP_PASS
 
-cd public_html
+binary
 
-# binary
-# put test.txt
+cd public_html/http
+
+rm -rf "$DESTINATION_SUBDIR"
+mkdir "$DESTINATION_SUBDIR"
+cd "$DESTINATION_SUBDIR"
+mput *
 
 quit
 COMMAND_BLOCK
